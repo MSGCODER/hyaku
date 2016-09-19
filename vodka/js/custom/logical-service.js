@@ -84,6 +84,14 @@ var custom_items = {
         'AE03': {'text': '雨伞架', 'price': 1, 'selected': false},
         'AF01': {'text': '快捷地毯(可拆洗)', 'price': 1, 'selected': false},
     },
+    logical_item_groups : [
+        'I01|I02', 'J01|J02|J03|J04', 'T01|T02',
+        'Q01|Q02|Q03|Q04', 'L01|L02', 'K01|K02|K03',
+        'H01|H02', 'P08|P09',
+        'M01|M02|M03|M04', 'V01|V02', 'U01|U02',
+        'P03|P04', 'AE01|AE02', 'B02|B03', 'Y01|Y02',
+        'P00|P01'
+    ],
 };
 
 
@@ -131,6 +139,47 @@ CustomLogicService.prototype.init = function(){
             _data_.logical_items_status[code].selected = true;
         }
     });
+}
+
+// 设置当前的状态
+CustomLogicService.prototype.updateStatus = function(codes){
+    var _data_ = this.data;
+    // 状态全置为空
+    _data_.logical_items_sequence.forEach(function(code){
+        if (_data_.logical_items_status[code]){
+            _data_.logical_items_status[code].selected = false;
+        }
+    });
+
+    // 更新状态
+    if(codes instanceof Array){
+        _data_.modal_selected = codes[0];
+        _data_.vehicle_color = codes[1];
+        _data_.interior_color = codes[2];
+
+        codes.forEach(function(code){
+            if (_data_.logical_items_status[code]){
+                _data_.logical_items_status[code].selected = true;
+            }
+        });
+    }else{
+        throw '[error] The codes(' + codes + ') is not Array!';
+    }
+
+    // 重新渲染页面
+    this.render();
+}
+
+// 是否在同一个逻辑项组内
+CustomLogicService.prototype.isInSameGroup = function(code1, code2){
+    var _data_ = this.data;
+
+    for(var i = 0; i < _data_.logical_item_groups.length; i++){
+        var group = _data_.logical_item_groups[i].split('|');
+        if(group.indexOf(code1) != -1 && group.indexOf(code2) != -1){
+            return true;
+        }
+    }
 }
 
 // 添加某项
@@ -208,9 +257,12 @@ CustomLogicService.prototype.isValidOperation = function(op){
     return true;
 }
 
-// 根据逻辑表查找解决方案
+/**
+ * 根据逻辑表查找解决方案
+ * @param operation
+ * @returns {Array}
+ */
 CustomLogicService.prototype.findSolution = function(operation){
-    var _data_ = this.data;
 
     // 若没有设置逻辑表,抛异常
     if(!this.logical_table){
@@ -221,84 +273,110 @@ CustomLogicService.prototype.findSolution = function(operation){
         throw '[error] Operation(' + op + ') is invalid!';
     }
 
+    // 定义解决方案
+    var solutions = [];
     // 获取该操作的逻辑关系
     var logicalRelation = this.logical_table[operation];
 
     // 根据逻辑表返回解决方案
     if(!logicalRelation){
-        return new CustomLogicSolution('default');
+        // return new CustomLogicSolution('default');
+        solutions.push(new CustomLogicSolution('default'));
     }else if(logicalRelation.disabled){
-        return new CustomLogicSolution('disabled');
+        // return new CustomLogicSolution('disabled');
+        solutions.push(new CustomLogicSolution('disabled'));
     }else{
-        // 有多个solution, 暂且先取第一个
         if(logicalRelation instanceof Array){
-            logicalRelation = logicalRelation[0];
+            // 有多个solution
+            logicalRelation.forEach(function(relation){
+                solutions.push(this.getSolutionByLogicalRelation(operation, relation));
+            }, this);
+        }else{
+            // 有且仅有一个solution
+            solutions.push(this.getSolutionByLogicalRelation(operation, logicalRelation));
         }
-        // 需要添加的项以及需要去除的项
-        var addItems = [];
-        var delItems = [];
-        // 根据当前状态筛选出需要添加的项
-        logicalRelation.plus.forEach(function(item){
-            if(item.indexOf('|') != -1){
-                var codes = item.split('|');
-                var isNeedPushToAddItems = true;
-                for(var index = 0; index < codes.length; index++){
-                    if(_data_.logical_items_status[codes[index]].selected){
-                        isNeedPushToAddItems = false;
-                        break;
-                    }
-                }
-                if(isNeedPushToAddItems){
-                    addItems.push(item);
-                }
-            }else{
-                // 如果当前需要选中的项还没有选中, 则添加之到需添加的项的数组中
-                if(!_data_.logical_items_status[item].selected){
-                    addItems.push(item);
+    }
+
+    return solutions;
+};
+
+// 根据逻辑关系找到
+CustomLogicService.prototype.getSolutionByLogicalRelation = function(operation, logicalRelation){
+    var _data_ = this.data;
+
+    // 需要添加的项以及需要去除的项
+    var addItems = [];
+    var delItems = [];
+    // 根据当前状态筛选出需要添加的项
+    logicalRelation.plus.forEach(function(item){
+        if(item.indexOf('|') != -1){
+            var codes = item.split('|');
+            var isNeedPushToAddItems = true;
+            for(var index = 0; index < codes.length; index++){
+                if(_data_.logical_items_status[codes[index]].selected){
+                    isNeedPushToAddItems = false;
+                    break;
                 }
             }
-        }, this);
+            if(isNeedPushToAddItems){
+                addItems.push(item);
+            }
+        }else{
+            // 如果当前需要选中的项还没有选中, 则添加之到需添加的项的数组中
+            if(!_data_.logical_items_status[item].selected){
+                addItems.push(item);
+            }
+        }
+    }, this);
 
-        // 根据当前状态筛选出需要删除的项
-        logicalRelation.minus.forEach(function(item){
-            if(item.indexOf('|') != -1){
-                var codes = item.split('|');
-                for(var index = 0; index < codes.length; index++){
-                    if(_data_.logical_items_status[codes[index]].selected){
-                        delItems.push(codes[index]);
-                        break;
-                    }
-                }
-            }else{
-                // 如果当前需要去除的项被选中了, 则添加之到需去除的项的数组中
-                if(_data_.logical_items_status[item].selected){
-                    delItems.push(item);
+    // 根据当前状态筛选出需要删除的项
+    logicalRelation.minus.forEach(function(item){
+        if(item.indexOf('|') != -1){
+            var codes = item.split('|');
+            for(var index = 0; index < codes.length; index++){
+                if(_data_.logical_items_status[codes[index]].selected){
+                    delItems.push(codes[index]);
+                    break;
                 }
             }
-        }, this);
+        }else{
+            // 如果当前需要去除的项被选中了, 则添加之到需去除的项的数组中
+            if(_data_.logical_items_status[item].selected){
+                delItems.push(item);
+            }
+        }
+    }, this);
 
+    /**
+     *  判断结果怎么处理
+     */
+    // 默认类型
+    if(addItems.length == 0 && delItems.length == 0){
         // 若经过计算,添加的项跟删减的项的个数都为0,则判断为默认解决方案
-        if(addItems.length == 0 && delItems.length == 0){
-            return new CustomLogicSolution('default');
-        }
+        return new CustomLogicSolution('default');
+    }
 
-        // 若因增加一项而仅仅消除另一项, 就无需弹框了
-        if(this.getOperationType(operation) == 1 &&
-            addItems.length == 0 &&
-            delItems.length == 1){
+    // normal
+    if(this.getOperationType(operation) == 1 &&
+        addItems.length == 0 &&
+        delItems.length == 1){
+        // 若因增加一项而仅仅消除另一项, 并且是在同一组, 就无需弹框了
+        // 判断是否在同一组
+        var code1 = this.getOperationItemCode(operation);
+        var code2 = delItems[0];
+        if(this.isInSameGroup(code1, code2)){
             var solution = new CustomLogicSolution('normal');
             solution.detail.addItems = addItems;
             solution.detail.delItems = delItems;
             return solution;
         }
-
-        // 弹框判断
-        var solution = new CustomLogicSolution('modal');
-        solution.detail.addItems = addItems;
-        solution.detail.delItems = delItems;
-        return solution;
     }
-};
+    // modal
+    var solution = new CustomLogicSolution('modal');
+    solution.detail.addItems = addItems;
+    solution.detail.delItems = delItems;
+    return solution;
+}
 
 // 获取当前选中的项目
 CustomLogicService.prototype.getSelectedItems = function(){
@@ -378,7 +456,7 @@ CustomLogicService.prototype.render = function(op){
       var _obj = $(".optional-checkbox[data-code="+codeArray[i]+"]").parents(".single-line-option").find(".number-text");
       if(selectedItems.indexOf(codeArray[i])!=-1){
         if(_obj.text()==0){
-          _obj.text(1);
+          _obj.text(_obj.attr("maxnum"));
         }
       }else{
         _obj.text(0);
@@ -397,21 +475,22 @@ CustomLogicService.prototype.render = function(op){
 }
 
 // 处理解决方案的组件
-function CustomSolutionHandler(service, operation, solution){
-    if(!(solution instanceof CustomLogicSolution)){
-        throw '[error] solution is invalid!';
-    }
+function CustomSolutionHandler(service, operation, solutions){
+    //if(!(solution instanceof CustomLogicSolution)){
+    //    throw '[error] solution is invalid!';
+    //}
 
     this.service = service;
     this.operation = operation;
-    this.solution = solution;
+    this.solutions = solutions;
+    this.currentSolutionIndex = 0;
 }
 
 // 模态框渲染器
 CustomSolutionHandler.prototype.conflictModalRender = function(){
     var _service = this.service;
     var _operation = this.operation;
-    var _solution = this.solution;
+    var _solution = this.solutions[this.currentSolutionIndex];
     var _this = this;
     if(_solution.type != 'modal'){
         throw '[error] solution is not the type of modal!';
@@ -422,7 +501,6 @@ CustomSolutionHandler.prototype.conflictModalRender = function(){
 
     // 创建某一单独的条目
     function createConflictComponentItem(input_box_type, code){
-
         var element = $('.conflict-single-option-template').find('.conflict-single-option').clone();
         // 设置code
         element.attr('data-code', code);
@@ -444,10 +522,12 @@ CustomSolutionHandler.prototype.conflictModalRender = function(){
             element.find('.input-box').append(inputBoxContent);
         }
 
+        var name = _service.getItemText(code);
+        var price = _service.getItemPrice(code) ;
         // 设置名字
-        element.find('.conflict-option-name').text(_service.getItemText(code));
+        element.find('.conflict-option-name').text(name);
         // 设置价格
-        element.find('.conflict-option-price').text('￥' + _service.getItemPrice(code));
+        element.find('.conflict-option-price').text('￥' + price);
 
         return element;
     }
@@ -536,9 +616,21 @@ CustomSolutionHandler.prototype.conflictModalRender = function(){
         $('#conflict .modal-body').append(createConflictComponent('minus', _solution.detail.delItems));
     }
 
-    // 注册'接受更改'的事件处理
+    // 注册详情按钮点击事件
+    $(".conflict-single-option").find('.show-details-img').on('click', function(event){
+        var code = $(this).parents('.conflict-single-option').attr('data-code');
+        var name = _service.getItemText(code);
+        var price = _service.getItemPrice(code) ;
+
+        var eventHandler = new EventService(_service);
+        eventHandler.handlers.showDetailModal(eventHandler, code, name, price, true);
+    });
+
+    // 解绑两个事件处理
     $('#save-conflict-solution').unbind('click');
     $('#drop-conflict-solution').unbind('click');
+
+    // 注册'接受更改'的事件处理
     $('#save-conflict-solution').click(function(event){
         // 处理操作的结果
         _this.handleOp();
@@ -568,14 +660,24 @@ CustomSolutionHandler.prototype.conflictModalRender = function(){
         _service.render(_operation);
         // 隐藏模态框
         $('#conflict').modal('hide');
-
-
     });
 
     // 注册'取消选择'的事件处理
     $('#drop-conflict-solution').click(function(){
         $('#conflict').modal('hide');
     });
+
+    // 多种解决方案
+    if(this.solutions.length > 1){
+        $('#other-solution').css('display', 'block');
+        $('#other-solution').unbind('click');
+        $('#other-solution').click(function(event){
+            _this.currentSolutionIndex = (_this.currentSolutionIndex + 1) % _this.solutions.length;
+            _this.handle();
+        });
+    }else{
+        $('#other-solution').css('display', 'none');
+    }
 
     // 显示当前modal
     $('#conflict').modal('show');
@@ -585,7 +687,7 @@ CustomSolutionHandler.prototype.conflictModalRender = function(){
 CustomSolutionHandler.prototype.handle = function(){
     var _service = this.service;
     var _operation = this.operation;
-    var _solution = this.solution;
+    var _solution = this.solutions[this.currentSolutionIndex];
 
     var type = _service.getOperationType(_operation);
     var code = _service.getOperationItemCode(_operation);

@@ -96,15 +96,20 @@ EventService.prototype.register = function(){
         $(searchInput).val("");
     });
 
-    //点击搜索以外的部分让搜索框消失
-    //$(document).click(function(e){
+    //点击导航栏部分让搜索框消失
+    $(".navbar").click(function(e){
+      $("#search-window").hide();
+      $('#search-parent').hide();
+      $(searchInput).val("");
+    });
+    // $(document).click(function(e){
     //    if($(e.target).parents().is("#search-window")){
     //        return false;
     //    }
     //    $("#search-window").hide();
     //    $('#search-parent').hide();
     //    $(searchInput).val("");
-    //});
+    // });
 
 }
 
@@ -153,10 +158,16 @@ EventService.prototype.handlers = {
     /*
      * 详情页/图片详情
      */
-    showDetailModal : function (event_service, code, name, price) {
+    showDetailModal : function (event_service, code, name, price, hide_btn) {
         var detailModal = $('#show-details-modal');
+
+        // 冲突框的modal
+        if(hide_btn){
+            detailModal = $('#nested-detail-modal');
+        }
+
         $(detailModal).find('h4.modal-title').html(name);
-        $(detailModal).find('#show-model-price').html(price);
+        $(detailModal).find('#show-model-price').html("¥" + price);
         // 设置图片
         var img = $('<img src="'+ CDN +'/img/optional/' + code +'.jpg"/>');
         $(img).attr("onerror",'javascript:this.src="' + CDN + '/img/optional/small_pic_default.png"');
@@ -165,47 +176,47 @@ EventService.prototype.handlers = {
         //console.log(img);
         container.empty();
         container.append(img);
-        /** 切换选择状态btn的初始功能 **/
-        // 清除btn绑定
-        var btn = $('#toggle-selected');
-        $(btn).unbind('click');
-        // 确定按钮状态
-        var inputElem = $('.optional-body').find('[data-code="'+code+'"]');
-        var isChecked = $(inputElem).hasClass('item-selected');
-        // 默认是已经选择的状态,对于没有选择的情况:
-        if (isChecked) {
-            $(btn).addClass('included');
-            $(btn).text('在配置中已经包含了');
-        } else {
-            $(btn).removeClass('included');
-            $(btn).text('加入配置中');
+
+        if(!hide_btn){
+            /** 切换选择状态btn的初始功能 **/
+            // 清除btn绑定
+            var btn = $('#toggle-selected');
+            $(btn).unbind('click');
+            // 确定按钮状态
+            var inputElem = $('.optional-body').find('[data-code="'+code+'"]');
+            var isChecked = $(inputElem).hasClass('item-selected');
+            // 默认是已经选择的状态,对于没有选择的情况:
+            if (isChecked) {
+                $(btn).addClass('included');
+                $(btn).text('在配置中已经包含了');
+            } else {
+                $(btn).removeClass('included');
+                $(btn).text('加入配置中');
+            }
+
+            // 注册btn点击事件
+            $(btn).on('click', function (event) {
+                var custom_logic_service = event_service.service;
+
+                var op = '';
+                if(custom_logic_service.isSelected(code)){
+                    op = '-' + code;
+                }else{
+                    op = '+' + code;
+                }
+                var solutions = custom_logic_service.findSolution(op);
+
+                // for debug
+                console.log(op);
+                console.log(solutions);
+
+                // handle solution
+                var solutionHandler = new CustomSolutionHandler(custom_logic_service, op, solutions);
+                solutionHandler.handle();
+            });
         }
 
-        // 设置按钮被点击切换的功能
-        /***** 特例 *****/
-        if (code == "W00") return;          // 电视特例,根本无法取消
-
-        // 注册btn点击事件
-        $(btn).on('click', function (event) {
-            var custom_logic_service = event_service.service;
-
-            var op = '';
-            if(custom_logic_service.isSelected(code)){
-                op = '-' + code;
-            }else{
-                op = '+' + code;
-            }
-            var solution = custom_logic_service.findSolution(op);
-
-            // for debug
-            console.log(op);
-            console.log(solution);
-
-            // handle solution
-            var solutionHandler = new CustomSolutionHandler(custom_logic_service, op, solution);
-            solutionHandler.handle();
-
-        });
+        $(detailModal).modal('show');
     },
 
     /**
@@ -281,6 +292,7 @@ EventService.prototype.handlers = {
         });
         //搜索后乘客位相应选项的事件
         Custom.specialInput();
+
         // 改变搜索结果数
         $('#results').text(matchCases.length);
     }

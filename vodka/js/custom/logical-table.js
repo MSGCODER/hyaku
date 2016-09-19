@@ -15,15 +15,28 @@ var custom_logical_table = {
     '+I02': {'plus': ['J02|J03|J04'], 'minus': ['I01', 'J01']},
     '-I02': {'plus': ['I01'], 'minus': []},
     '+J01': {'plus': ['I01'], 'minus': ['I02', 'J02|J03|J04', 'T01|T02']},
-    '-J01': {'disabled': true},
+    // '-J01': {'disabled': true},
+    '-J01': {'plus': ['J02|J03|J04'], 'minus': []},
     '+J02': {'plus': [], 'minus': ['J01|J03|J04']},
-    '-J02': {'disabled': true},
+    // '-J02': {'disabled': true},
+    '-J02': [
+        {'plus': ['J03|J04'], 'minus': []},
+        {'plus': ['J01', 'I01'], 'minus': ['I02', 'T01|T02']},
+    ],
     '+J03': {'plus': [], 'minus': ['J01|J02|J04']},
-    '-J03': {'disabled': true},
+    // '-J03': {'disabled': true},
+    '-J03': [
+        {'plus': ['J02|J04'], 'minus': []},
+        {'plus': ['J01', 'I01'], 'minus': ['I02', 'T01|T02']},
+    ],
     '+J04': {'plus': [], 'minus': ['J01|J02|J03']},
-    '-J04': {'disabled': true},
+    // '-J04': {'disabled': true},
+    '-J04': [
+        {'plus': ['J02|J03'], 'minus': []},
+        {'plus': ['J01', 'I01'], 'minus': ['I02', 'T01|T02']},
+    ],
     '+T01': {'plus': ['J02|J03|J04'], 'minus': ['T02', 'J01']},
-    '-T01': {'plus': [], 'minus': []},
+    // '-T01': {'plus': [], 'minus': []},
     '+T02': {'plus': ['J02|J03|J04'], 'minus': ['T01', 'J01']},
     // '-T02': {'plus': [], 'minus': []},
     /**
@@ -41,13 +54,29 @@ var custom_logical_table = {
     '+Q01': {'plus': ['L01', 'K01', 'H01'], 'minus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03', 'H02', 'P08|P09']},
     '-Q01': {'plus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03'], 'minus': ['L01', 'K01']},
     '+Q02': {'plus': ['L02', 'K02|K03'], 'minus': ['Q01|Q03|Q04|Q05', 'L01', 'K01']},
-    '-Q02': {'disabled': true},
+    // '-Q02': {'disabled': true},
+    '-Q02': [
+        {'plus': ['Q03|Q04|Q05'], 'minus': []},
+        {'plus': ['Q01', 'L01', 'K01'], 'minus': ['L02', 'K02|K03', 'H02', 'P08', 'P09']}
+    ],
     '+Q03': {'plus': ['L02', 'K02|K03'], 'minus': ['Q01|Q02|Q04|Q05', 'L01', 'K01']},
-    '-Q03': {'disabled': true},
+    // '-Q03': {'disabled': true},
+    '-Q03': [
+        {'plus': ['Q02|Q04|Q05'], 'minus': []},
+        {'plus': ['Q01', 'L01', 'K01'], 'minus': ['L02', 'K02|K03', 'H02', 'P08', 'P09']}
+    ],
     '+Q04': {'plus': ['L02', 'K02|K03'], 'minus': ['Q01|Q02|Q03|Q05', 'L01', 'K01']},
-    '-Q04': {'disabled': true},
+    // '-Q04': {'disabled': true},
+    '-Q04': [
+        {'plus': ['Q02|Q03|Q05'], 'minus': []},
+        {'plus': ['Q01', 'L01', 'K01'], 'minus': ['L02', 'K02|K03', 'H02', 'P08', 'P09']}
+    ],
     '+Q05': {'plus': ['L02', 'K02|K03'], 'minus': ['Q01|Q02|Q03|Q04', 'L01', 'K01']},
-    '-Q05': {'disabled': true},
+    // '-Q05': {'disabled': true},
+    '-Q05': [
+        {'plus': ['Q02|Q03|Q04'], 'minus': []},
+        {'plus': ['Q01', 'L01', 'K01'], 'minus': ['L02', 'K02|K03', 'H02', 'P08', 'P09']}
+    ],
     '+L01': {'plus': ['Q01', 'K01', 'H01'], 'minus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03', 'H02', 'P08|P09']},
     '-L01': {'plus': ['L02', 'Q02|Q03|Q04|Q05', 'K02|K03'], 'minus': ['Q01', 'K01']},
     '+L02': {'plus': ['Q02|Q03|Q04|Q05', 'K02|K03'], 'minus': ['Q01', 'L01', 'K01']},
@@ -55,9 +84,17 @@ var custom_logical_table = {
     '+K01': {'plus': ['Q01', 'L01', 'H01'], 'minus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03', 'H02', 'P08|P09']},
     '-K01': {'plus': ['L02', 'Q02|Q03|Q04|Q05', 'K02|K03'], 'minus': ['Q01', 'L01']},
     '+K02': {'plus': ['Q02|Q03|Q04|Q05', 'L02'], 'minus': ['K01|K03', 'Q01', 'L01']},
-    '-K02': {'disabled': true},
+    // '-K02': {'disabled': true},
+    '-K02': [
+        {'plus': ['K03'], 'minus': []},
+        {'plus': ['K01', 'Q01', 'L01'], 'minus': ['Q02|Q03|Q04|Q05', 'L02', 'H02', 'P08', 'P09']}
+    ],
     '+K03': {'plus': ['Q02|Q03|Q04|Q05', 'L02'], 'minus': ['K01|K02', 'Q01', 'L01']},
-    '-K03': {'disabled': true},
+    // '-K03': {'disabled': true},
+    '-K03': [
+        {'plus': ['K02'], 'minus': []},
+        {'plus': ['K01', 'Q01', 'L01'], 'minus': ['Q02|Q03|Q04|Q05', 'L02', 'H02', 'P08', 'P09']}
+    ],
     '+H01': {'plus': [], 'minus': ['H02']},
     '-H01': {'plus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03', 'H02'], 'minus': ['Q01', 'L01', 'K01']},
     '+H02': {'plus': ['Q02|Q03|Q04|Q05', 'L02', 'K02|K03'], 'minus': ['Q01', 'L01', 'K01', 'H01']},
@@ -78,16 +115,42 @@ var custom_logical_table = {
         {'plus': ['V01|V02'], 'minus': ['M02|M03|M04', 'AF01']}
     ],
     '+M02': {'plus': [], 'minus': ['M01', 'M03|M04', 'V01|V02']},
-    '-M02': {'disabled': true},
+    // '-M02': {'disabled': true},
+    '-M02': [
+        {'plus': ['M03|M04'], 'minus': []},
+        {'plus': ['M01'], 'minus': ['AF01']},
+        {'plus': ['V01|V02'], 'minus': ['AF01']},
+    ],
     '+M03': {'plus': [], 'minus': ['M01', 'M02|M04', 'V01|V02']},
-    '-M03': {'disabled': true},
+    // '-M03': {'disabled': true},
+    '-M03': [
+        {'plus': ['M02|M04'], 'minus': []},
+        {'plus': ['M01'], 'minus': ['AF01']},
+        {'plus': ['V01|V02'], 'minus': ['AF01']},
+    ],
     '+M04': {'plus': [], 'minus': ['M01', 'M02|M03', 'V01|V02']},
-    '-M04': {'disabled': true},
+    // '-M04': {'disabled': true},
+    '-M04': [
+        {'plus': ['M02|M04'], 'minus': []},
+        {'plus': ['M01'], 'minus': ['AF01']},
+        {'plus': ['V01|V02'], 'minus': ['AF01']},
+    ],
     '+V01': {'plus': [], 'minus': ['M01', 'M02|M03|M04', 'V02', 'AF01']},
-    '-V01': {'disabled': true},
+    // '-V01': {'disabled': true},
+    '-V01': [
+        {'plus': ['V02'], 'minus': []},
+        {'plus': ['M01'], 'minus': ['AF01']},
+        {'plus': ['M02|M03|M04'], 'minus': []},
+    ],
     '+V02': {'plus': [], 'minus': ['M01', 'M02|M03|M04', 'V01', 'AF01']},
-    '-V02': {'disabled': true},
+    // '-V02': {'disabled': true},
+    '-V02': [
+        {'plus': ['V01'], 'minus': []},
+        {'plus': ['M01'], 'minus': ['AF01']},
+        {'plus': ['M02|M03|M04'], 'minus': []},
+    ],
 
+    '+AF01': {'plus': ['M02|M03|M04'], 'minus': ['M01', 'V01|V02']},
     /**
      *  ['U01', 'U02'], // 人造桃木内饰组件, 胡桃木内饰组件
      *  'P03': 首长办公桌
@@ -128,7 +191,8 @@ var custom_logical_table = {
      * 'Y02': boss高端环绕声音响系统
      */
     '+Y01': {'plus': [], 'minus': ['Y02']},
-    '-Y01': {'disabled': true},
+    // '-Y01': {'disabled': true},
+    '-Y01': {'plus': ['Y02'], 'minus': []},
     '+Y02': {'plus': [], 'minus': ['Y01']},
     '-Y02': {'plus': ['Y01'], 'minus': []},
 
@@ -137,7 +201,8 @@ var custom_logical_table = {
      * 'P01': 灭火器4个
      */
     '+P00': {'plus': [], 'minus': ['P01']},
-    '-P00': {disabled: true},
+    // '-P00': {disabled: true},
+    '-P00': {'plus': ['P01'], 'minus': []},
     '+P01': {'plus': [], 'minus': ['P00']},
     '-P01': {'plus': ['P00'], 'minus': []},
 
